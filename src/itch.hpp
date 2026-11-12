@@ -84,7 +84,7 @@ struct OrderReplace{
 	std::uint32_t price;
 };
 inline OrderReplace decode_order_replace(const std::uint8_t* p){
-	OrderReplace	m;
+	OrderReplace m;
 	m.message_type = char(p[0]);
 	m.stock_locate = read_u16_be(p+1);
 	m.tracking_number = read_u16_be(p+3);
@@ -98,8 +98,7 @@ inline OrderReplace decode_order_replace(const std::uint8_t* p){
 }
 
 inline AddOrder decode_add_order(const std::uint8_t* p){
-	AddOrder	m;
-	
+	AddOrder m;
 	m.message_type = char(p[0]);
 	m.stock_locate = read_u16_be(p+1);
 	m.tracking_number = read_u16_be(p+3);
