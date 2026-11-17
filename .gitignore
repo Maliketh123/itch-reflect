@@ -5,3 +5,4 @@ test_itch
 data/
 reflect_hello
 reflect_layout
+test_reflect_decode

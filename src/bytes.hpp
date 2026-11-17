@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include<cstddef>
+
 template<class T,std::size_t N>
 constexpr T read_be(const uint8_t* p){
 	static_assert(N <= sizeof(T),"read_be : N bytes do no fit in T");
