@@ -1,12 +1,13 @@
 #pragma once 
 #include"bytes.hpp"
+#include"wire.hpp"
 #include<array>
 
 struct AddOrder{
 	char message_type;//1
 	std::uint16_t stock_locate;//2
 	std::uint16_t tracking_number;//2
-	std::uint64_t timestamp;//6
+	[[=Wire{6}]] std::uint64_t timestamp;//6
 	std::uint64_t order_reference;//8
 	char side;//1
 	std::uint32_t shares;//4
@@ -18,7 +19,7 @@ struct OrderExecuted{
 	char message_type;
 	std::uint16_t stock_locate;//2
 	std::uint16_t tracking_number;//2
-	std::uint64_t timestamp;//6
+	[[=Wire{6}]] std::uint64_t timestamp;//6
 	std::uint64_t order_reference;//8
 	std::uint32_t executed_shares;
 	std::uint64_t match_number;
@@ -40,7 +41,7 @@ struct OrderCancel{
 	char message_type;
 	std::uint16_t stock_locate;//2
 	std::uint16_t tracking_number;//2
-	std::uint64_t timestamp;//6
+	[[=Wire{6}]] std::uint64_t timestamp;//6
 	std::uint64_t order_reference;//8
 	std::uint32_t cancelled_shares;
 };
@@ -60,7 +61,7 @@ struct OrderDelete{
 	char message_type;
 	std::uint16_t stock_locate;//2
 	std::uint16_t tracking_number;//2
-	std::uint64_t timestamp;//6
+	[[=Wire{6}]] std::uint64_t timestamp;//6
 	std::uint64_t order_reference;//8
 };
 inline OrderDelete decode_order_delete(const std::uint8_t* p){
@@ -77,7 +78,7 @@ struct OrderReplace{
 	char message_type;
 	std::uint16_t stock_locate;//2
 	std::uint16_t tracking_number;//2
-	std::uint64_t timestamp;//6
+	[[=Wire{6}]] std::uint64_t timestamp;//6
 	std::uint64_t order_reference;//8
 	std::uint64_t new_order_reference;
 	std::uint32_t shares;
