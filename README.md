@@ -15,16 +15,32 @@ All three measurements say the two decoders are the same.
 |---|---|---|
 | Messages decoded (real feed, 2.1 GB) | 64,904,600 | 64,904,600 |
 | Checksum over all decoded fields | 17380614335067787380 | 17380614335067787380 |
-| Fastest of 5 passes | 315.61 ms | 316.44 ms |
-| Median of 5 passes | 316.12 ms | 316.83 ms |
-| Time per decoded message | 4.86 ns | 4.88 ns |
-| Machine code for `AddOrder` (`-O3`) | 68 lines of assembly | identical, instruction for instruction |
+| Fastest of 5 passes | 285.76 ms | 285.80 ms |
+| Median of 5 passes | 286.43 ms | 286.08 ms |
+| Time per decoded message | 4.40 ns | 4.40 ns |
+| Machine code for `AddOrder` (`-O3`) | 49 lines of assembly | the same 49 lines, except two one-byte loads (see below) |
 
 1. **Correctness.** On 64.9 million real messages, both decoders produce the same checksum over every numeric field.
-2. **Speed.** The two are within 0.3% of each other, and which one comes out ahead changes between benchmark runs: in an earlier run the generated decoder was 0.05% faster, in this one it is 0.26% slower. Since the machine code is identical (point 3), these gaps are measurement noise. The generated decoder always runs second within each round, which may also contribute.
-3. **Machine code.** GCC emits exactly the same instructions for `decode<AddOrder>` as for the hand-written `decode_add_order`.
+2. **Speed.** The two are within 0.02% of each other in this run, and within 0.3% across all runs, with the faster one changing between runs. These gaps are measurement noise. The generated decoder always runs second within each round, which may also contribute.
+3. **Machine code.** GCC emits the same instructions for `decode<AddOrder>` as for the hand-written `decode_add_order`, apart from the two one-byte `char` fields: the hand-written decoder loads them with `ldrsb` (sign-extending) and the generated one with `ldrb` (zero-extending). Both values are then stored with `strb`, which keeps only the low 8 bits, so the bytes written are the same. Before the change below, the two functions were identical instruction for instruction (68 lines each).
 
 Reflection does all its work while compiling. By the time the program runs, only ordinary decoding code is left, which is why the speed and the machine code match.
+
+## Improvement: reading whole fields
+
+The first version of `read_be` built each number one byte at a time: one load, one shift and one add per byte. For 4- and 8-byte fields the compiler did not recognise this as a byte-order reversal, so an 8-byte field took about 22 instructions.
+
+`read_be` now copies the whole field into a 64-bit integer with `std::memcpy`, reverses its bytes with `std::byteswap`, and shifts out the unused bytes. On arm64 this becomes one load and one `rev` instruction per field. The old loop is kept for compile-time evaluation, selected with `if consteval`, because `std::memcpy` cannot run at compile time.
+
+| | Byte-by-byte | Whole field + byte swap |
+|---|---|---|
+| Assembly lines for `AddOrder` | 68 | 49 |
+| Byte-swap instructions | 2 (`rev16`) | 6 (one per multi-byte field) |
+| Hand-written, fastest pass | 315.61 ms | 285.76 ms (9.5% faster) |
+| Generated, fastest pass | 316.44 ms | 285.80 ms (9.7% faster) |
+| Checksum | 17380614335067787380 | 17380614335067787380 |
+
+Both decoders call `read_be`, so both gain equally. The overall gain is smaller than the reduction in decoding instructions because the timed loop also walks the length framing and adds up the checksum.
 
 ## How it works
 
@@ -137,3 +153,4 @@ The `awk` patterns assume macOS symbol names (a leading underscore).
 - Machine code was compared for `AddOrder` only.
 - `decode<T>` relies on every member being written; a member it skips would be left uninitialised.
 - Supported member types: `char`, unsigned integers up to 64 bits, and `std::array<char, 8>`.
+- The fast path of `read_be` assumes a little-endian machine; a `static_assert` stops the build otherwise.
