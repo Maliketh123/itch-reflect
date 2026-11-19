@@ -11,3 +11,6 @@ bench
 asm_compare.s
 hand.s
 gen.s
+asm_compare.s
+hand.s
+gen.s
