@@ -7,3 +7,4 @@ reflect_hello
 reflect_layout
 test_reflect_decode
 test_reflect_itch
+bench
