@@ -8,3 +8,6 @@ reflect_layout
 test_reflect_decode
 test_reflect_itch
 bench
+asm_compare.s
+hand.s
+gen.s

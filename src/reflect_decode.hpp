@@ -15,7 +15,7 @@ consteval std::size_t wire_width(std::meta::info j){
 }
 template<class T>
 inline T decode(const std::uint8_t* p){
-    T obj{};
+    T obj;
     constexpr auto ctx = std::meta::access_context::unchecked();
     template for(constexpr auto j : std::define_static_array(std::meta::nonstatic_data_members_of(^^T,ctx))){
         constexpr auto alpha = wire_width(j);
